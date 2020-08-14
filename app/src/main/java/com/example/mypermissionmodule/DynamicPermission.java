@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
@@ -29,6 +30,7 @@ public class DynamicPermission
     private Context context;
     private int REQUEST_PERMISSION = 100;
     private String TAG = getClass().getSimpleName();
+    PermissionListener permissionListener;
 
     public DynamicPermission(@Nullable String[] permissionList, @NonNull Context context)
     {
@@ -52,7 +54,7 @@ public class DynamicPermission
         if(needPermissionForBlocking(context)){
             if(permissionList.size() <= 0) Toast.makeText(context, "요청권한이 없습니다.", Toast.LENGTH_SHORT).show();
             else{
-                permissionCheck();
+                if(permissionCheck())permissionListener.onSuccess();
             }
 
         }else Toast.makeText(context, "권한을 획득할 수 없습니다.", Toast.LENGTH_SHORT).show();
@@ -65,7 +67,6 @@ public class DynamicPermission
         for (int i = 0; i < permissionList.size(); i++) {
             if (context.checkSelfPermission(permissionList.get(i)) != PackageManager.PERMISSION_GRANTED) isPermission = false;
         }
-        Log.d("asasad",permissionList.toArray(new String[permissionList.size()])[0] + isPermission);
         if (isPermission == false) {
             ((Activity)context).requestPermissions(permissionList.toArray(new String[permissionList.size()]), REQUEST_PERMISSION);
         }
@@ -76,11 +77,12 @@ public class DynamicPermission
         Log.d(TAG,"[onActivityResult] requestCode = "+requestCode);
         if(requestCode == 100){
             if(permissionCheck()){
-                Toast.makeText(context, "모든 권한이 허가되었습니다.", Toast.LENGTH_SHORT).show();
+                this.permissionListener.onSuccess();
+            }else{
+                this.permissionListener.onFiled();
             }
         }
     }
-
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Log.d(TAG,"[onRequestPermissionResult] requestCode = "+requestCode);
         boolean isPermitted = true;
@@ -153,4 +155,40 @@ public class DynamicPermission
         alertDialogBuilder.setPositiveButton(negativeBtnMessage,negative);
         return alertDialogBuilder.create();
     }
+
+    public void permissionDialog(String message, String intentAction){
+        if(!Settings.canDrawOverlays(context)){
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+            alertDialogBuilder.setTitle("권한 요청");
+            alertDialogBuilder.setMessage(message);
+            alertDialogBuilder.setCancelable(false);
+            alertDialogBuilder.setNegativeButton("건너뛰기", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            alertDialogBuilder.setPositiveButton("권한실행", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent overlayIntent = new Intent(intentAction,
+                            Uri.parse("package:"+context.getPackageName()));
+                    context.startActivity(overlayIntent);
+                }
+            });
+            alertDialogBuilder.show();
+        }
+    }
+
+    public interface PermissionListener{
+        public void onSuccess();
+        public void onFiled();
+
+    }
+
+    public void setPermissionListener(PermissionListener permissionListener){
+        this.permissionListener = permissionListener;
+    }
+
 }
+
