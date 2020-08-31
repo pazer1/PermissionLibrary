@@ -153,7 +153,8 @@ public class DynamicPermission
         return alertDialogBuilder.create();
     }
 
-    public void permissionDialog(String message, String intentAction){
+    public void permissionDialog(String message, String intentAction,int requestCode){
+        REQUEST_PERMISSION = requestCode;
         if(!Settings.canDrawOverlays(context)){
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
             alertDialogBuilder.setTitle("권한 요청");
@@ -170,7 +171,7 @@ public class DynamicPermission
                 public void onClick(DialogInterface dialog, int which) {
                     Intent overlayIntent = new Intent(intentAction,
                             Uri.parse("package:"+context.getPackageName()));
-                    context.startActivity(overlayIntent);
+                    ((Activity)context).startActivityForResult(overlayIntent,REQUEST_PERMISSION);
                 }
             });
             alertDialogBuilder.show();
