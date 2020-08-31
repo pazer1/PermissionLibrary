@@ -31,6 +31,8 @@ public class DynamicPermission
     private int REQUEST_PERMISSION = 100;
     private String TAG = getClass().getSimpleName();
     PermissionListener permissionListener;
+    OnActivityListener onActivityListener;
+
 
     public DynamicPermission(@Nullable String[] permissionList, @NonNull Context context)
     {
@@ -73,15 +75,10 @@ public class DynamicPermission
         return isPermission;
     }
 
-    public void onActivityResultPermission(int requestCode, int resultCode, @Nullable Intent data){
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
         Log.d(TAG,"[onActivityResult] requestCode = "+requestCode);
-        if(requestCode == 100){
-            if(permissionCheck()){
-                this.permissionListener.onSuccess();
-            }else{
-                this.permissionListener.onFiled();
-            }
-        }
+        if(permissionCheck())this.onActivityListener.onSuccess();
+            else this.onActivityListener.onFailed();
     }
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Log.d(TAG,"[onRequestPermissionResult] requestCode = "+requestCode);
@@ -181,14 +178,22 @@ public class DynamicPermission
     }
 
     public interface PermissionListener{
-        public void onSuccess();
-        public void onFiled();
+        void onSuccess();
+        void onFailed();
 
+    }
+
+    public interface OnActivityListener{
+        void onSuccess();
+        void onFailed();
     }
 
     public void setPermissionListener(PermissionListener permissionListener){
         this.permissionListener = permissionListener;
     }
 
+    public void setOnActivityListener(OnActivityListener onActivityListener){
+        this.onActivityListener = onActivityListener;
+    }
 }
 
