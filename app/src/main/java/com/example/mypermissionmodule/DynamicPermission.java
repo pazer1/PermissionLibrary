@@ -127,6 +127,8 @@ public class DynamicPermission
                 //만일 mPermissionList가 size가 0과 같거나 작아지면,
                 makeDialog("앱 실행 권한","모든 권한을 허가하지 않으면 앱을 실행할 수 없습니다.","권한 실행","앱 종료",
                         (dialog, which) -> {((Activity)context).requestPermissions(permissionList.toArray(new String[permissionList.size()]),REQUEST_PERMISSION);dialog.dismiss();},(dialog, which) -> {dialog.dismiss();((Activity)context).finish();}).show();
+            }else{
+                permissionListener.onSuccess();
             }
         }
     }
